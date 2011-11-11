@@ -11,6 +11,7 @@
         round = Math.round,
         languages = {},
         hasModule = (typeof module !== 'undefined'),
+        hasExports = (typeof exports !== 'undefined'),
         paramsToParse = 'months|monthsShort|weekdays|weekdaysShort|longDateFormat|relativeTime|ordinal'.split('|'),
         i,
         VERSION = "1.1.0",
@@ -330,7 +331,7 @@
 
     // language switching and caching
     moment.lang = function (key, values) {
-        var i, param, req;
+        var i, param, pth, req;
         if (values) {
             languages[key] = values;
         }
@@ -340,8 +341,14 @@
                 moment[param] = languages[key][param] || moment[param];
             }
         } else {
-            if (hasModule) {
-                req = require('./lang/' + key);
+            if (hasModule || hasExports) {
+                if (hasModule) {
+                    pth = './lang/' + key;
+                }
+                else if (hasExports) {
+                    pth = 'lang/' + key;
+                }
+                req = require(pth);
                 moment.lang(key, req);
             }
         }
@@ -499,6 +506,10 @@
     // CommonJS module is defined
     if (hasModule) {
         module.exports = moment;
+    }
+    else if (hasExports) {
+        // CouchDB support
+        exports.moment = moment;
     }
     if (typeof window !== 'undefined') {
         window.moment = moment;
